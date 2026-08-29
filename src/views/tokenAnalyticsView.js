@@ -69,10 +69,10 @@ window.TokenAnalyticsView = {
     const isDark = document.documentElement.classList.contains('dark');
     const primaryColor = isDark ? '#3B82F6' : '#2563EB';
     const secondaryColor = isDark ? '#38BDF8' : '#0284C7';
-    const gridColor = isDark ? 'rgba(59, 130, 246, 0.08)' : 'rgba(0, 0, 0, 0.06)';
-    const tickColor = isDark ? '#94A3B8' : '#64748B';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.06)';
+    const tickColor = isDark ? '#9CA3AF' : '#64748B';
     const legendColor = isDark ? '#E2E8F0' : '#334155';
-    const doughnutBorder = isDark ? '#0B1224' : '#FFFFFF';
+    const doughnutBorder = isDark ? '#18191D' : '#FFFFFF';
     const doughnutPalette = isDark 
       ? ['#3B82F6', '#38BDF8', '#6366F1', '#818CF8', '#93C5FD']
       : ['#2563EB', '#0284C7', '#4F46E5', '#60A5FA', '#93C5FD'];

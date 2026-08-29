@@ -248,20 +248,20 @@ window.DashboardView = {
                       </span>
                     </td>
                     <td class="py-3 px-4 font-sans">
-                      <div class="text-zinc-200 font-medium">${agent.model}</div>
-                      <div class="text-[10px] text-zinc-400 font-mono">${agent.framework}</div>
+                      <div class="text-zinc-200">${agent.model}</div>
+                      <div class="text-[10px] text-zinc-400 font-mono">${agent.primaryTool || agent.version || 'LangChain'}</div>
                     </td>
                     <td class="py-3 px-4">
-                      <span class="flex items-center gap-1.5 ${agent.status === 'HEALTHY' ? 'text-emerald-400' : 'text-amber-400'} font-semibold font-sans">
+                      <span class="flex items-center gap-1.5 ${agent.status === 'HEALTHY' ? 'text-emerald-400' : 'text-amber-400'} font-sans">
                         <span class="w-2 h-2 rounded-full ${agent.status === 'HEALTHY' ? 'bg-emerald-400 shadow-sm shadow-emerald-400/50' : 'bg-amber-400 shadow-sm shadow-amber-400/50'}"></span>
                         ${agent.status}
                       </span>
                     </td>
-                    <td class="py-3 px-4 font-bold text-emerald-400">${agent.successRate}%</td>
-                    <td class="py-3 px-4 font-medium text-zinc-300">${agent.avgLatency}s</td>
-                    <td class="py-3 px-4 font-bold text-slate-900 dark:text-white">$${agent.totalCost}</td>
+                    <td class="py-3 px-4 text-emerald-400">${agent.successRate}%</td>
+                    <td class="py-3 px-4 text-zinc-300">${agent.avgLatency}s</td>
+                    <td class="py-3 px-4 text-slate-900 dark:text-white">$${(agent.cost !== undefined ? Number(agent.cost).toFixed(2) : '0.00')}</td>
                     <td class="py-3 px-4 text-right font-sans">
-                      <a href="#/agents/${agent.id}" class="px-2.5 py-1 rounded bg-brandBlue/10 hover:bg-brandBlue hover:text-white text-brandBlue text-xs border border-brandBlue/30 transition-all inline-block font-semibold">
+                      <a href="#/agents/${agent.id}" class="px-2.5 py-1 rounded bg-brandBlue/10 hover:bg-brandBlue hover:text-white text-brandBlue text-xs border border-brandBlue/30 transition-all inline-block">
                         Inspect
                       </a>
                     </td>
@@ -280,15 +280,15 @@ window.DashboardView = {
 
   initCharts: function () {
     const isDark = document.documentElement.classList.contains('dark');
-    const primaryColor = isDark ? '#3B82F6' : '#2563EB'; // Electric/Royal Blue (Hero & Login)
+    const primaryColor = isDark ? '#3B82F6' : '#2563EB'; // Electric/Royal Blue
     const secondaryColor = isDark ? '#EF4444' : '#DC2626'; // Error Coral/Crimson
     const p50Color = isDark ? '#3B82F6' : '#2563EB'; // Electric Blue
     const p95Color = isDark ? '#38BDF8' : '#0284C7'; // Luminous Sky Cyan
-    const p99Color = isDark ? '#818CF8' : '#6366F1'; // Royal Indigo / Aurora
-    const gridColor = isDark ? 'rgba(59, 130, 246, 0.08)' : 'rgba(0, 0, 0, 0.06)';
-    const tickColor = isDark ? '#94A3B8' : '#64748B';
-    const fillBg = isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(37, 99, 235, 0.08)';
-    const errorFill = isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(220, 38, 38, 0.06)';
+    const p99Color = isDark ? '#818CF8' : '#6366F1'; // Royal Indigo
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.06)';
+    const tickColor = isDark ? '#9CA3AF' : '#64748B';
+    const fillBg = isDark ? 'rgba(59, 130, 246, 0.12)' : 'rgba(37, 99, 235, 0.08)';
+    const errorFill = isDark ? 'rgba(239, 68, 68, 0.10)' : 'rgba(220, 38, 38, 0.06)';
 
     // Chart 1: Execution Volume Line Chart
     const ctxVol = document.getElementById('chart-execution-volume');

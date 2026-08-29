@@ -39,12 +39,12 @@
 html.dark {
   color-scheme: dark;
 
-  /* Dark Theme Color Tokens - Matching Hero Aurora & Login Blue Mesh */
-  --bg-dark: #02040A;
-  --surface-dark: #0B1224;
-  --surface-elevated: #111C36;
-  --surface-border: #1E2D4A;
-  --surface-border-hover: #3B82F6;
+  /* Dark Theme Color Tokens - Dark Grey Canvas & Surfaces (No Dark Blue) */
+  --bg-dark: #111215;
+  --surface-dark: #18191D;
+  --surface-elevated: #212328;
+  --surface-border: #2B2D34;
+  --surface-border-hover: #3E414B;
   --brand-blue: #3B82F6;
   --brand-blue-hover: #60A5FA;
   --brand-purple: #818CF8;
@@ -53,20 +53,20 @@ html.dark {
   --status-warning: #F59E0B;
   --status-error: #EF4444;
   --status-info: #38BDF8;
-  --bg-space: #02040A;
-  --bg-obsidian: #060B18;
-  --surface: #0B1224;
+  --bg-space: #111215;
+  --bg-obsidian: #141518;
+  --surface: #18191D;
   --brand-violet: #A78BFA;
   --brand-indigo: #6366F1;
-  --text-muted: #64748B;
-  --text-secondary: #94A3B8;
-  --body-bg: #02040A;
-  --body-text: #F8FAFC;
-  --sidebar-bg: #060C1B;
-  --header-bg: rgba(11, 18, 36, 0.85);
-  --scrollbar-track: #060C1B;
-  --scrollbar-thumb: #1E2D4A;
-  --scrollbar-hover: #3B82F6;
+  --text-muted: #71717A;
+  --text-secondary: #9CA3AF;
+  --body-bg: #111215;
+  --body-text: #F3F4F6;
+  --sidebar-bg: #141518;
+  --header-bg: rgba(20, 21, 24, 0.88);
+  --scrollbar-track: #141518;
+  --scrollbar-thumb: #2B2D34;
+  --scrollbar-hover: #3E414B;
   --pulse-color: rgba(59, 130, 246, 0.7);
 }
 
