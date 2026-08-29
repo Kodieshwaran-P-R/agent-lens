@@ -13,6 +13,7 @@ window.AgentLensApp = {
     this.setupEventListeners();
     this.setupLensAi();
     this.setupCommandPalette();
+    this.setupShortcutsModal();
     this.setupSpanInspector();
     this.setupNotificationCenter();
     this.setupUserProfile();
@@ -544,6 +545,8 @@ window.AgentLensApp = {
       }
       if (e.key === 'Escape') {
         if (modal && !modal.classList.contains('hidden')) modal.classList.add('hidden');
+        const shortcutsModal = document.getElementById('shortcuts-modal');
+        if (shortcutsModal && !shortcutsModal.classList.contains('hidden')) shortcutsModal.classList.add('hidden');
         const notifDrawer = document.getElementById('notification-drawer');
         if (notifDrawer) notifDrawer.classList.add('translate-x-full');
         const lensDrawer = document.getElementById('lens-ai-drawer');
@@ -558,6 +561,32 @@ window.AgentLensApp = {
     if (input) {
       input.oninput = (e) => this.renderCmdResults(e.target.value);
     }
+  },
+
+  // 5b. Keyboard Shortcuts Helper Modal (?)
+  setupShortcutsModal: function() {
+    const openBtn = document.getElementById('open-shortcuts-btn');
+    const closeBtn = document.getElementById('close-shortcuts-btn');
+    const modal = document.getElementById('shortcuts-modal');
+
+    const toggle = () => {
+      if (modal) {
+        modal.classList.toggle('hidden');
+        if (window.lucide) lucide.createIcons();
+      }
+    };
+
+    if (openBtn) openBtn.onclick = toggle;
+    if (closeBtn) closeBtn.onclick = () => { if (modal) modal.classList.add('hidden'); };
+
+    window.addEventListener('keydown', (e) => {
+      const activeTag = document.activeElement?.tagName?.toLowerCase();
+      if (['input', 'textarea', 'select'].includes(activeTag)) return;
+      if (e.key === '?') {
+        e.preventDefault();
+        toggle();
+      }
+    });
   },
 
   renderCmdResults: function(query) {

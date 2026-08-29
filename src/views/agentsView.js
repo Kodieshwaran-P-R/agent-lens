@@ -24,8 +24,8 @@ window.AgentsView = {
           </div>
 
           <div class="flex items-center gap-3">
-            <input type="text" id="agent-search-input" placeholder="Filter agents by name or tool..." class="bg-surfaceElevated border border-surfaceBorder rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-brandBlue">
-            <select class="bg-surfaceElevated text-xs text-slate-200 border border-surfaceBorder rounded-lg px-3 py-1.5 focus:outline-none">
+            <input type="text" id="agent-search-input" placeholder="Filter agents by name, model, or tool..." class="bg-surfaceElevated border border-surfaceBorder rounded-xl px-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-brandBlue w-56">
+            <select id="agent-env-select" class="bg-surfaceElevated text-xs text-zinc-200 border border-surfaceBorder rounded-xl px-3 py-1.5 focus:outline-none focus:border-brandBlue">
               <option value="all">All Environments</option>
               <option value="production">Production</option>
               <option value="staging">Staging</option>
@@ -38,7 +38,7 @@ window.AgentsView = {
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-xs">
               <thead>
-                <tr class="border-b border-surfaceBorder bg-bgDark/50 text-slate-400 font-mono">
+                <tr class="border-b border-surfaceBorder bg-surfaceElevated/50 text-zinc-400 font-mono text-[10px] uppercase">
                   <th class="py-3.5 px-4">AGENT NAME & VERSION</th>
                   <th class="py-3.5 px-4">ENV</th>
                   <th class="py-3.5 px-4">STATUS</th>
@@ -52,50 +52,8 @@ window.AgentsView = {
                   <th class="py-3.5 px-4">ACTION</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-surfaceBorder text-slate-200">
-                ${agents.map(agent => `
-                  <tr class="hover:bg-surfaceElevated/60 transition-colors group">
-                    <td class="py-3.5 px-4 font-semibold text-slate-100 flex items-center gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-surfaceElevated border border-surfaceBorder flex items-center justify-center text-brandBlue group-hover:border-brandBlue/50 transition-colors">
-                        <i data-lucide="bot" class="w-4 h-4"></i>
-                      </div>
-                      <div>
-                        <a href="#/agents/${agent.id}" class="hover:text-brandBlue font-bold text-sm transition-colors">${agent.name}</a>
-                        <div class="text-[10px] text-slate-400 font-mono">${agent.version} | ${agent.model}</div>
-                      </div>
-                    </td>
-                    <td class="py-3.5 px-4 font-mono text-slate-400">
-                      <span class="px-2 py-0.5 rounded text-[10px] uppercase bg-surfaceElevated border border-surfaceBorder">${agent.environment}</span>
-                    </td>
-                    <td class="py-3.5 px-4">
-                      ${agent.status === 'HEALTHY' ? `
-                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-mono bg-statusSuccess/10 text-statusSuccess border border-statusSuccess/30">
-                          ● Healthy
-                        </span>
-                      ` : agent.status === 'WARNING' ? `
-                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-mono bg-statusWarning/10 text-statusWarning border border-statusWarning/30">
-                          ▲ Warning
-                        </span>
-                      ` : `
-                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-mono bg-statusError/10 text-statusError border border-statusError/30">
-                          ✖ Critical
-                        </span>
-                      `}
-                    </td>
-                    <td class="py-3.5 px-4 font-mono text-slate-300">${agent.executions.toLocaleString()}</td>
-                    <td class="py-3.5 px-4 font-mono font-medium ${agent.successRate > 98 ? 'text-statusSuccess' : 'text-statusWarning'}">${agent.successRate}%</td>
-                    <td class="py-3.5 px-4 font-mono text-slate-300">${agent.avgLatency}s</td>
-                    <td class="py-3.5 px-4 font-mono text-slate-400">${agent.p95Latency}s</td>
-                    <td class="py-3.5 px-4 font-mono text-slate-300">${agent.totalTokens}</td>
-                    <td class="py-3.5 px-4 font-mono text-slate-300">$${agent.cost.toFixed(2)}</td>
-                    <td class="py-3.5 px-4 font-mono ${agent.errors > 30 ? 'text-statusError font-bold' : 'text-slate-400'}">${agent.errors}</td>
-                    <td class="py-3.5 px-4">
-                      <a href="#/agents/${agent.id}" class="px-2.5 py-1 rounded bg-surfaceElevated hover:bg-brandBlue text-slate-200 hover:text-white font-medium text-xs border border-surfaceBorder transition-all inline-block">
-                        Inspect
-                      </a>
-                    </td>
-                  </tr>
-                `).join('')}
+              <tbody id="agents-table-body" class="divide-y divide-surfaceBorder text-zinc-200 font-mono">
+                ${this.renderAgentRows(agents)}
               </tbody>
             </table>
           </div>
@@ -103,7 +61,108 @@ window.AgentsView = {
       </div>
     `;
 
-    setTimeout(() => lucide.createIcons(), 50);
+    this.bindAgentListEvents();
+
+    setTimeout(() => {
+      if (window.lucide) lucide.createIcons();
+    }, 50);
+  },
+
+  renderAgentRows: function(agents) {
+    if (!agents || agents.length === 0) {
+      return `
+        <tr>
+          <td colspan="11" class="py-14 px-4 text-center">
+            <div class="max-w-sm mx-auto space-y-3 font-sans">
+              <div class="w-12 h-12 rounded-2xl bg-surfaceElevated border border-surfaceBorder flex items-center justify-center mx-auto text-zinc-400">
+                <i data-lucide="bot-off" class="w-6 h-6"></i>
+              </div>
+              <div class="space-y-1">
+                <div class="font-bold text-white text-sm">No matching agents found</div>
+                <p class="text-xs text-zinc-400">No registered agents match your current keyword or environment filter.</p>
+              </div>
+              <button onclick="document.getElementById('agent-search-input').value=''; document.getElementById('agent-env-select').value='all'; window.AgentsView.renderList(document.getElementById('view-container'));" class="px-4 py-2 rounded-xl bg-brandBlue hover:bg-brandBlueHover text-white text-xs font-semibold transition-all cursor-pointer shadow-md shadow-brandBlue/20">
+                Reset Filters
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+
+    return agents.map(agent => `
+      <tr class="hover:bg-surfaceElevated/60 transition-colors group">
+        <td class="py-3.5 px-4 font-semibold text-white flex items-center gap-3 font-sans">
+          <div class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 group-hover:border-brandBlue/50 transition-colors">
+            <i data-lucide="bot" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <a href="#/agents/${agent.id}" class="hover:text-brandBlue font-bold text-sm transition-colors text-white">${agent.name}</a>
+            <div class="text-[10px] text-zinc-400 font-mono">${agent.version} | ${agent.model}</div>
+          </div>
+        </td>
+        <td class="py-3.5 px-4 font-mono text-zinc-400">
+          <span class="px-2 py-0.5 rounded text-[10px] uppercase bg-surfaceElevated border border-surfaceBorder">${agent.environment}</span>
+        </td>
+        <td class="py-3.5 px-4">
+          ${agent.status === 'HEALTHY' ? `
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              ● Healthy
+            </span>
+          ` : agent.status === 'WARNING' ? `
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              ▲ Warning
+            </span>
+          ` : `
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono bg-rose-500/10 text-rose-400 border border-rose-500/20">
+              ✖ Critical
+            </span>
+          `}
+        </td>
+        <td class="py-3.5 px-4 font-mono text-zinc-300">${agent.executions.toLocaleString()}</td>
+        <td class="py-3.5 px-4 font-mono font-medium ${agent.successRate > 98 ? 'text-emerald-400' : 'text-amber-400'}">${agent.successRate}%</td>
+        <td class="py-3.5 px-4 font-mono text-zinc-300">${agent.avgLatency}s</td>
+        <td class="py-3.5 px-4 font-mono text-zinc-400">${agent.p95Latency}s</td>
+        <td class="py-3.5 px-4 font-mono text-zinc-300">${agent.totalTokens}</td>
+        <td class="py-3.5 px-4 font-mono text-zinc-300">$${agent.cost.toFixed(2)}</td>
+        <td class="py-3.5 px-4 font-mono ${agent.errors > 30 ? 'text-rose-400 font-bold' : 'text-zinc-400'}">${agent.errors}</td>
+        <td class="py-3.5 px-4 font-sans">
+          <a href="#/agents/${agent.id}" class="px-2.5 py-1 rounded bg-brandBlue/10 hover:bg-brandBlue text-brandBlue hover:text-white font-medium text-xs border border-brandBlue/30 transition-all inline-block font-semibold">
+            Inspect
+          </a>
+        </td>
+      </tr>
+    `).join('');
+  },
+
+  bindAgentListEvents: function() {
+    const input = document.getElementById('agent-search-input');
+    const envSelect = document.getElementById('agent-env-select');
+
+    const update = () => {
+      const q = (input ? input.value : '').toLowerCase().trim();
+      const env = envSelect ? envSelect.value : 'all';
+
+      const filtered = window.AgentLensData.agents.filter(a => {
+        if (env !== 'all' && a.environment !== env) return false;
+        if (q) {
+          const matchesName = a.name.toLowerCase().includes(q);
+          const matchesModel = a.model.toLowerCase().includes(q);
+          const matchesTool = a.primaryTool && a.primaryTool.toLowerCase().includes(q);
+          if (!matchesName && !matchesModel && !matchesTool) return false;
+        }
+        return true;
+      });
+
+      const tbody = document.getElementById('agents-table-body');
+      if (tbody) {
+        tbody.innerHTML = this.renderAgentRows(filtered);
+        if (window.lucide) lucide.createIcons();
+      }
+    };
+
+    if (input) input.oninput = update;
+    if (envSelect) envSelect.onchange = update;
   },
 
   renderDetail: function(container, agentId) {
