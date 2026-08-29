@@ -243,7 +243,7 @@ window.AgentLensApp = {
     }
   },
 
-  // 4. Lens AI Assistant Engine
+  // 4. Lens AI Assistant Engine (Powered by Google Gemini)
   setupLensAi: function() {
     const openBtn = document.getElementById('open-lens-ai-btn');
     const closeBtn = document.getElementById('close-lens-ai-btn');
@@ -251,76 +251,200 @@ window.AgentLensApp = {
     const form = document.getElementById('lens-ai-form');
     const input = document.getElementById('lens-ai-input');
     const messages = document.getElementById('lens-ai-messages');
+    const badge = document.getElementById('gemini-status-badge');
+
+    const updateBadge = () => {
+      if (!badge) return;
+      const isConfigured = window.GeminiService && window.GeminiService.isConfigured();
+      if (isConfigured) {
+        badge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1';
+        badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Gemini 1.5 Active';
+      } else {
+        badge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1 cursor-pointer';
+        badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Gemini Key Needed';
+        badge.onclick = () => {
+          window.location.hash = '#/settings';
+          if (drawer) drawer.classList.add('translate-x-full');
+        };
+      }
+    };
 
     if (openBtn && drawer) {
-      openBtn.onclick = () => drawer.classList.remove('translate-x-full');
+      openBtn.onclick = () => {
+        drawer.classList.remove('translate-x-full');
+        updateBadge();
+      };
     }
     if (closeBtn && drawer) {
       closeBtn.onclick = () => drawer.classList.add('translate-x-full');
     }
 
-    if (form && input && messages) {
-      form.onsubmit = (e) => {
-        e.preventDefault();
-        const text = input.value.trim();
-        if (!text) return;
+    // Helper to format markdown text safely
+    const formatAiResponse = (raw) => {
+      let formatted = raw
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/### (.*?)\n/g, '<h4 class="font-bold text-white text-xs mt-2 mb-1">$1</h4>')
+        .replace(/## (.*?)\n/g, '<h3 class="font-bold text-white text-sm mt-2 mb-1">$1</h3>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em class="text-zinc-300">$1</em>')
+        .replace(/`([^`]+)`/g, '<code class="bg-black/60 text-sky-300 px-1.5 py-0.5 rounded font-mono text-[11px] border border-surfaceBorder">$1</code>')
+        .replace(/#([0-9a-fA-F]{8,16})/g, '<a href="#/traces/$1" class="text-brandBlue hover:underline font-mono font-bold">#$1</a>')
+        .replace(/\n\n/g, '</p><p class="mt-2 text-zinc-300 leading-relaxed font-normal">')
+        .replace(/\n- /g, '<li class="ml-4 list-disc text-zinc-300 my-0.5">')
+        .replace(/\n\d+\. /g, '<li class="ml-4 list-decimal text-zinc-300 my-0.5">');
 
-        messages.innerHTML += `
-          <div class="flex gap-3 justify-end">
-            <div class="bg-brandCyan text-black font-semibold p-3 rounded-xl max-w-md font-sans text-xs shadow">
-              ${text}
-            </div>
+      return `<p class="text-zinc-300 leading-relaxed font-normal">${formatted}</p>`;
+    };
+
+    // Process user question
+    const handleQuery = async (queryText) => {
+      const text = (queryText || '').trim();
+      if (!text || !messages) return;
+
+      // Add user message
+      messages.innerHTML += `
+        <div class="flex gap-3 justify-end">
+          <div class="bg-brandBlue text-white font-normal p-3 rounded-xl max-w-md font-sans text-xs shadow-md">
+            ${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
           </div>
-        `;
+        </div>
+      `;
+      messages.scrollTop = messages.scrollHeight;
 
-        input.value = '';
-        messages.scrollTop = messages.scrollHeight;
-
-        setTimeout(() => {
-          messages.innerHTML += `
-            <div id="ai-loading-msg" class="flex gap-3">
-              <div class="w-7 h-7 rounded-lg bg-brandViolet/20 border border-brandViolet/30 flex items-center justify-center flex-shrink-0 animate-pulse">
-                <i data-lucide="bot" class="w-4 h-4 text-brandViolet"></i>
-              </div>
-              <div class="bg-surfaceElevated p-3 rounded-xl border border-surfaceBorder text-textMuted font-mono text-[11px]">
-                Analyzing telemetry traces & model costs...
-              </div>
+      // Check if Gemini API key is missing
+      if (!window.GeminiService || !window.GeminiService.isConfigured()) {
+        messages.innerHTML += `
+          <div class="flex gap-3">
+            <div class="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+              <i data-lucide="key" class="w-4 h-4 text-amber-400"></i>
             </div>
-          `;
-          messages.scrollTop = messages.scrollHeight;
-          lucide.createIcons();
-        }, 300);
-
-        setTimeout(() => {
-          const loadingMsg = document.getElementById('ai-loading-msg');
-          if (loadingMsg) loadingMsg.remove();
-
-          messages.innerHTML += `
-            <div class="flex gap-3">
-              <div class="w-7 h-7 rounded-lg bg-brandViolet/20 border border-brandViolet/30 flex items-center justify-center flex-shrink-0">
-                <i data-lucide="bot" class="w-4 h-4 text-brandViolet"></i>
+            <div class="bg-surfaceElevated p-4 rounded-xl border border-surfaceBorder max-w-md space-y-3 text-xs">
+              <div class="font-bold text-white flex items-center justify-between">
+                <span>Connect Google Gemini API</span>
+                <span class="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">Setup Required</span>
               </div>
-              <div class="bg-surfaceElevated p-3.5 rounded-xl border border-surfaceBorder max-w-md space-y-2 text-xs">
-                <p class="text-slate-200 leading-relaxed font-normal">
-                  Based on telemetry indexed for <strong class="text-brandCyan">ResearchAgent</strong>:
-                </p>
-                <div class="p-2 bg-bgSpace rounded border border-surfaceBorder font-mono text-[11px] space-y-1">
-                  <div class="text-statusWarning font-bold">Primary Root Cause:</div>
-                  <div class="text-slate-300">WebSearch API endpoint experienced 420ms tail network latency before gpt-4o token synthesis.</div>
+              <p class="text-zinc-300 font-normal leading-relaxed">
+                To enable live AI telemetry reasoning, enter your Google Gemini API Key from Google AI Studio:
+              </p>
+              <div class="space-y-2">
+                <div class="flex gap-2">
+                  <input id="inline-gemini-key" type="password" placeholder="Paste AIzaSy... key here" class="flex-1 bg-surfaceDark border border-surfaceBorder rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-brandBlue" />
+                  <button id="inline-save-gemini-btn" class="px-3 py-2 rounded-lg bg-brandBlue hover:bg-brandBlueHover text-white text-xs font-semibold whitespace-nowrap cursor-pointer">
+                    Save Key
+                  </button>
                 </div>
-                <div class="pt-1">
-                  <a href="#/traces/8fa21c90e4a7" onclick="document.getElementById('lens-ai-drawer').classList.add('translate-x-full')" class="text-brandCyan hover:underline font-mono font-semibold flex items-center gap-1">
-                    <span>Inspect Affected Trace #8fa21c90e4a7</span> →
+                <div class="flex items-center justify-between text-[11px]">
+                  <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-400 hover:underline flex items-center gap-1 font-mono">
+                    Get Free API Key →
+                  </a>
+                  <a href="#/settings" class="text-zinc-400 hover:text-white underline">
+                    Open Settings
                   </a>
                 </div>
               </div>
             </div>
-          `;
-          messages.scrollTop = messages.scrollHeight;
-          lucide.createIcons();
-        }, 1200);
+          </div>
+        `;
+        messages.scrollTop = messages.scrollHeight;
+        if (window.lucide) lucide.createIcons();
+
+        const saveBtn = document.getElementById('inline-save-gemini-btn');
+        const keyInput = document.getElementById('inline-gemini-key');
+        if (saveBtn && keyInput) {
+          saveBtn.onclick = async () => {
+            const entered = keyInput.value.trim();
+            if (!entered) return;
+            window.GeminiService.setApiKey(entered);
+            updateBadge();
+            if (window.AgentLensApp && window.AgentLensApp.showToast) {
+              window.AgentLensApp.showToast('Gemini API Key Saved!', 'success');
+            }
+            // Re-run the user query now that key is configured
+            handleQuery(text);
+          };
+        }
+        return;
+      }
+
+      // Add loading message
+      const loadingId = 'ai-loading-' + Date.now();
+      messages.innerHTML += `
+        <div id="${loadingId}" class="flex gap-3">
+          <div class="w-7 h-7 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0 animate-pulse">
+            <i data-lucide="sparkles" class="w-4 h-4 text-blue-400"></i>
+          </div>
+          <div class="bg-surfaceElevated p-3 rounded-xl border border-surfaceBorder text-zinc-400 font-mono text-[11px] flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+            <span>Gemini 1.5 Flash analyzing telemetry & traces...</span>
+          </div>
+        </div>
+      `;
+      messages.scrollTop = messages.scrollHeight;
+      if (window.lucide) lucide.createIcons();
+
+      // Call Gemini API
+      const result = await window.GeminiService.askGemini(text);
+
+      const loader = document.getElementById(loadingId);
+      if (loader) loader.remove();
+
+      if (result.success) {
+        messages.innerHTML += `
+          <div class="flex gap-3">
+            <div class="w-7 h-7 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
+              <i data-lucide="sparkles" class="w-4 h-4 text-blue-400"></i>
+            </div>
+            <div class="bg-surfaceElevated p-3.5 rounded-xl border border-surfaceBorder max-w-md space-y-2 text-xs">
+              <div class="flex items-center justify-between text-[10px] font-mono text-zinc-400 border-b border-surfaceBorder pb-1 mb-2">
+                <span class="flex items-center gap-1 text-emerald-400">● Gemini 1.5 Flash</span>
+                <span>Telemetry Ingested</span>
+              </div>
+              <div class="space-y-2 text-zinc-200">
+                ${formatAiResponse(result.text)}
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        messages.innerHTML += `
+          <div class="flex gap-3">
+            <div class="w-7 h-7 rounded-lg bg-rose-500/20 border border-rose-500/30 flex items-center justify-center flex-shrink-0">
+              <i data-lucide="alert-circle" class="w-4 h-4 text-rose-400"></i>
+            </div>
+            <div class="bg-surfaceElevated p-3.5 rounded-xl border border-rose-500/30 max-w-md space-y-1.5 text-xs">
+              <div class="font-bold text-rose-400">Gemini Error</div>
+              <p class="text-zinc-300 font-normal">${result.error}</p>
+              <div class="pt-1 text-[11px]">
+                <a href="#/settings" class="text-blue-400 hover:underline">Update Gemini API Key in Settings →</a>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      messages.scrollTop = messages.scrollHeight;
+      if (window.lucide) lucide.createIcons();
+    };
+
+    // Wire up chat form
+    if (form && input) {
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        const query = input.value;
+        input.value = '';
+        handleQuery(query);
       };
     }
+
+    // Wire up quick suggestion chips
+    document.querySelectorAll('.ai-prompt-chip').forEach(chip => {
+      chip.onclick = () => {
+        const text = chip.innerText.replace(/^[^"]*"|"[^"]*$/g, '').trim();
+        handleQuery(text);
+      };
+    });
+
+    updateBadge();
   },
 
   // 5. Command Palette (Ctrl+K)

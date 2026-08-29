@@ -11,6 +11,7 @@ window.AppConfig = {
     if (typeof import.meta !== 'undefined' && import.meta.env) {
       this.env.GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || import.meta.env.GOOGLE_CLIENT_ID;
       this.env.GOOGLE_CLIENT_SECRET = import.meta.env.VITE_GOOGLE_CLIENT_SECRET || import.meta.env.GOOGLE_CLIENT_SECRET;
+      this.env.GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY;
       this.env.OTEL_ENDPOINT = import.meta.env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT;
     }
 
@@ -71,11 +72,36 @@ window.AppConfig = {
     return !!(id && id.trim() && !id.includes('your_google_client_id_here'));
   },
 
+  getGeminiApiKey: function() {
+    return this.env.VITE_GEMINI_API_KEY || 
+           this.env.GEMINI_API_KEY || 
+           localStorage.getItem('agentlens_gemini_api_key') || 
+           '';
+  },
+
+  saveGeminiApiKey: function(key) {
+    if (!key) {
+      localStorage.removeItem('agentlens_gemini_api_key');
+      delete this.env.VITE_GEMINI_API_KEY;
+      delete this.env.GEMINI_API_KEY;
+      return;
+    }
+    const cleanKey = key.trim();
+    localStorage.setItem('agentlens_gemini_api_key', cleanKey);
+    this.env.VITE_GEMINI_API_KEY = cleanKey;
+    this.env.GEMINI_API_KEY = cleanKey;
+  },
+
+  isGeminiConfigured: function() {
+    const key = this.getGeminiApiKey();
+    return Boolean(key && key.trim().length > 10);
+  },
+
   getEnvSource: function() {
-    if (this.env.VITE_GOOGLE_CLIENT_ID || this.env.GOOGLE_CLIENT_ID) {
+    if (this.env.VITE_GOOGLE_CLIENT_ID || this.env.GOOGLE_CLIENT_ID || this.env.VITE_GEMINI_API_KEY) {
       return '.env';
     }
-    if (localStorage.getItem('agentlens_google_client_id')) {
+    if (localStorage.getItem('agentlens_google_client_id') || localStorage.getItem('agentlens_gemini_api_key')) {
       return 'localStorage';
     }
     return 'unset';

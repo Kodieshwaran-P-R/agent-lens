@@ -300,21 +300,26 @@
 
   <!-- Lens AI Slide-Over Drawer -->
   <div id="lens-ai-drawer"
-    class="fixed inset-y-0 right-0 w-full max-w-lg bg-[#0E0E11] border-l border-surfaceBorder shadow-2xl z-50 flex flex-col transform translate-x-full transition-transform duration-300">
+    class="fixed inset-y-0 right-0 w-full max-w-lg bg-surfaceDark border-l border-surfaceBorder shadow-2xl z-50 flex flex-col transform translate-x-full transition-transform duration-300">
     <div class="p-4 border-b border-surfaceBorder flex items-center justify-between bg-surfaceElevated/50">
       <div class="flex items-center gap-3">
         <div
-          class="w-8 h-8 rounded-lg bg-white p-0.5 flex items-center justify-center">
-          <div class="w-full h-full bg-black rounded-[6px] flex items-center justify-center">
-            <i data-lucide="sparkles" class="w-4 h-4 text-white"></i>
+          class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-cyan-400 p-0.5 flex items-center justify-center shadow-md">
+          <div class="w-full h-full bg-surfaceDark rounded-[6px] flex items-center justify-center">
+            <i data-lucide="sparkles" class="w-4 h-4 text-cyan-400"></i>
           </div>
         </div>
         <div>
-          <h3 class="font-bold text-sm text-white">Lens AI Debug Assistant</h3>
-          <p class="text-xs text-zinc-400">Natural language trace analysis & troubleshooting</p>
+          <div class="flex items-center gap-2">
+            <h3 class="font-bold text-sm text-white">Lens AI Debug Assistant</h3>
+            <span id="gemini-status-badge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/15 text-blue-400 border border-blue-500/30">
+              Gemini 1.5 Flash
+            </span>
+          </div>
+          <p class="text-xs text-zinc-400">Powered by Google Gemini for trace reasoning & root cause analysis</p>
         </div>
       </div>
-      <button id="close-lens-ai-btn" class="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-surfaceElevated">
+      <button id="close-lens-ai-btn" class="text-zinc-400 hover:text-white p-1.5 rounded-lg hover:bg-surfaceElevated transition-all">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
@@ -324,26 +329,32 @@
       <!-- AI Welcome Message -->
       <div class="flex gap-3">
         <div
-          class="w-7 h-7 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center flex-shrink-0">
-          <i data-lucide="bot" class="w-4 h-4 text-white"></i>
+          class="w-7 h-7 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="bot" class="w-4 h-4 text-blue-400"></i>
         </div>
         <div class="bg-surfaceElevated p-3.5 rounded-xl border border-surfaceBorder max-w-md space-y-2">
           <p class="text-zinc-200 leading-relaxed font-normal">
-            Hello! I'm <strong class="text-white">Lens AI</strong>. I have indexed your agent telemetry, execution
-            graphs, traces, and LLM costs.
+            Hello! I'm <strong class="text-white">Lens AI</strong>, integrated with Google Gemini to analyze your agent telemetry, execution graphs, traces, and LLM costs in real time.
           </p>
+          <div id="gemini-key-alert" class="hidden p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] space-y-1 font-sans">
+            <div class="font-bold flex items-center gap-1.5">
+              <i data-lucide="key" class="w-3.5 h-3.5"></i>
+              <span>Gemini API Key Required</span>
+            </div>
+            <p class="text-zinc-300">Enter your key below or in Workspace Settings to activate real-time reasoning.</p>
+          </div>
           <p class="text-zinc-400">Ask me anything, or try these quick options:</p>
           <div class="flex flex-col gap-1.5 pt-1">
             <button
-              class="ai-prompt-chip text-left p-2 rounded-lg bg-black border border-surfaceBorder hover:border-white text-zinc-300 hover:text-white transition-all">
+              class="ai-prompt-chip text-left p-2 rounded-lg bg-surfaceDark border border-surfaceBorder hover:border-brandBlue text-zinc-300 hover:text-white transition-all cursor-pointer">
               🔍 "Why did ResearchAgent latency spike in the last hour?"
             </button>
             <button
-              class="ai-prompt-chip text-left p-2 rounded-lg bg-black border border-surfaceBorder hover:border-white text-zinc-300 hover:text-white transition-all">
+              class="ai-prompt-chip text-left p-2 rounded-lg bg-surfaceDark border border-surfaceBorder hover:border-brandBlue text-zinc-300 hover:text-white transition-all cursor-pointer">
               ⚡ "Show me the top 3 slowest tool calls"
             </button>
             <button
-              class="ai-prompt-chip text-left p-2 rounded-lg bg-black border border-surfaceBorder hover:border-white text-zinc-300 hover:text-white transition-all">
+              class="ai-prompt-chip text-left p-2 rounded-lg bg-surfaceDark border border-surfaceBorder hover:border-brandBlue text-zinc-300 hover:text-white transition-all cursor-pointer">
               💡 "How can I reduce ResearchAgent execution cost?"
             </button>
           </div>
@@ -352,12 +363,12 @@
     </div>
 
     <!-- AI Input Footer -->
-    <div class="p-3 border-t border-surfaceBorder bg-surfaceElevated/30">
+    <div class="p-3 border-t border-surfaceBorder bg-surfaceElevated/50">
       <form id="lens-ai-form" class="flex items-center gap-2">
-        <input id="lens-ai-input" type="text" placeholder="Ask Lens AI about your traces, latency, or errors..."
-          class="flex-1 bg-black border border-surfaceBorder rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-white">
-        <button type="submit" class="bg-white text-black p-2 rounded-lg hover:bg-zinc-200 transition-colors font-semibold">
-          <i data-lucide="send" class="w-4 h-4 text-black"></i>
+        <input id="lens-ai-input" type="text" placeholder="Ask Gemini about traces, latency bottlenecks, or errors..."
+          class="flex-1 bg-surfaceDark border border-surfaceBorder rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brandBlue transition-all">
+        <button type="submit" class="bg-brandBlue text-white p-2 rounded-lg hover:bg-brandBlueHover transition-colors font-semibold cursor-pointer">
+          <i data-lucide="send" class="w-4 h-4 text-white"></i>
         </button>
       </form>
     </div>
@@ -501,6 +512,7 @@ Instructions:
 
   <!-- Main Application JavaScript Modules -->
   <script src="src/config.js"></script>
+  <script src="src/geminiService.js"></script>
   <script src="src/types.js"></script>
   <script src="src/mockData.js"></script>
   <script src="src/auth.js"></script>
