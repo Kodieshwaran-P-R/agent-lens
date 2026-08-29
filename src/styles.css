@@ -1,0 +1,490 @@
+:root {
+  --font-primary: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-secondary: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-primary);
+  font-weight: 400;
+  color-scheme: light;
+
+  /* Light Theme Color Tokens - Cohesive with Hero & Login */
+  --bg-dark: #F8FAFC;
+  --surface-dark: #FFFFFF;
+  --surface-elevated: #F0F6FF;
+  --surface-border: #E2E8F0;
+  --surface-border-hover: #93C5FD;
+  --brand-blue: #2563EB;
+  --brand-blue-hover: #1D4ED8;
+  --brand-purple: #6366F1;
+  --brand-cyan: #0284C7;
+  --status-success: #059669;
+  --status-warning: #D97706;
+  --status-error: #DC2626;
+  --status-info: #0284C7;
+  --bg-space: #FFFFFF;
+  --bg-obsidian: #F8FAFC;
+  --surface: #FFFFFF;
+  --brand-violet: #7C3AED;
+  --brand-indigo: #4F46E5;
+  --text-muted: #64748B;
+  --text-secondary: #475569;
+  --body-bg: #F8FAFC;
+  --body-text: #0F172A;
+  --sidebar-bg: #FFFFFF;
+  --header-bg: rgba(255, 255, 255, 0.9);
+  --scrollbar-track: #F1F5F9;
+  --scrollbar-thumb: #CBD5E1;
+  --scrollbar-hover: #93C5FD;
+  --pulse-color: rgba(37, 99, 235, 0.7);
+}
+
+html.dark {
+  color-scheme: dark;
+
+  /* Dark Theme Color Tokens - Matching Hero Aurora & Login Blue Mesh */
+  --bg-dark: #02040A;
+  --surface-dark: #0B1224;
+  --surface-elevated: #111C36;
+  --surface-border: #1E2D4A;
+  --surface-border-hover: #3B82F6;
+  --brand-blue: #3B82F6;
+  --brand-blue-hover: #60A5FA;
+  --brand-purple: #818CF8;
+  --brand-cyan: #38BDF8;
+  --status-success: #10B981;
+  --status-warning: #F59E0B;
+  --status-error: #EF4444;
+  --status-info: #38BDF8;
+  --bg-space: #02040A;
+  --bg-obsidian: #060B18;
+  --surface: #0B1224;
+  --brand-violet: #A78BFA;
+  --brand-indigo: #6366F1;
+  --text-muted: #64748B;
+  --text-secondary: #94A3B8;
+  --body-bg: #02040A;
+  --body-text: #F8FAFC;
+  --sidebar-bg: #060C1B;
+  --header-bg: rgba(11, 18, 36, 0.85);
+  --scrollbar-track: #060C1B;
+  --scrollbar-thumb: #1E2D4A;
+  --scrollbar-hover: #3B82F6;
+  --pulse-color: rgba(59, 130, 246, 0.7);
+}
+
+/* User Uploaded Blue Vertical Gradient & Grid Background for Auth Left Half */
+.auth-grid-bg {
+  background-color: #102A6B;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(180deg, #091834 0%, #0F2D6B 20%, #1D4ED8 45%, #3B82F6 70%, #93C5FD 90%, #BAC7D5 100%);
+  background-size: 28px 28px, 28px 28px, 100% 100%;
+  background-repeat: repeat, repeat, no-repeat;
+  background-position: 0 0, 0 0, center center;
+}
+
+/* User Uploaded Vertical Blue Aurora & Luminous Light Pillars Hero Background */
+.hero-pillars-bg {
+  background-color: #F8FAFC;
+  background-image: 
+    radial-gradient(ellipse 95% 65% at 50% 100%, rgba(147, 197, 253, 0.6) 0%, rgba(59, 130, 246, 0.35) 35%, rgba(219, 234, 254, 0.2) 65%, #F8FAFC 95%),
+    linear-gradient(90deg, 
+      transparent 0%, 
+      rgba(59, 130, 246, 0.07) 12%, 
+      transparent 18%, 
+      rgba(37, 99, 235, 0.12) 32%, 
+      transparent 40%, 
+      rgba(147, 197, 253, 0.2) 50%, 
+      transparent 60%, 
+      rgba(37, 99, 235, 0.12) 68%, 
+      transparent 82%, 
+      rgba(59, 130, 246, 0.07) 88%, 
+      transparent 100%
+    ),
+    linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 30%, #EFF6FF 55%, #DBEAFE 82%, #BFDBFE 100%);
+  background-attachment: fixed;
+  background-size: 100% 100%, 100% 100%, 100% 100%;
+}
+
+html.dark .hero-pillars-bg {
+  background-color: #02040A;
+  background-image: 
+    radial-gradient(ellipse 95% 65% at 50% 100%, #38BDF8 0%, #2563EB 30%, #1E1B4B 60%, #02040A 95%),
+    linear-gradient(90deg, 
+      transparent 0%, 
+      rgba(56, 189, 248, 0.08) 12%, 
+      transparent 18%, 
+      rgba(59, 130, 246, 0.18) 32%, 
+      transparent 40%, 
+      rgba(147, 197, 253, 0.28) 50%, 
+      transparent 60%, 
+      rgba(59, 130, 246, 0.18) 68%, 
+      transparent 82%, 
+      rgba(56, 189, 248, 0.08) 88%, 
+      transparent 100%
+    ),
+    linear-gradient(180deg, #000000 0%, #030712 25%, #0B1938 52%, #1D4ED8 82%, #38BDF8 100%);
+}
+
+/* Typography: Manrope (Primary) & Inter (Secondary) — Strictly Regular (400) Weight */
+body {
+  background-color: var(--body-bg);
+  color: var(--body-text);
+  transition: background-color 0.2s ease, color 0.15s ease;
+  font-family: var(--font-primary);
+  font-weight: 400 !important;
+}
+
+/* Global Regular Weight Enforcement Across All Elements (No Bold Styles) */
+html,
+body,
+*,
+*::before,
+*::after,
+h1, h2, h3, h4, h5, h6,
+b, strong,
+.font-bold,
+.font-semibold,
+.font-extrabold,
+.font-medium,
+button,
+input,
+select,
+textarea,
+th, td {
+  font-weight: 400 !important;
+}
+
+/* Primary Font: Manrope (Headings, Brand, Navigation, Action Buttons) */
+h1, h2, h3, h4, h5, h6,
+.font-display,
+.font-primary,
+.font-sans,
+.brand-logo-text,
+aside#sidebar,
+header#topbar,
+button,
+a {
+  font-family: var(--font-primary);
+}
+
+/* Secondary Font: Inter (Body, Paragraphs, Form Inputs, Tables, Descriptions) */
+p,
+span:not(.font-mono):not(.sidebar-text),
+label,
+input,
+select,
+textarea,
+table,
+.font-secondary,
+.font-inter,
+.text-secondary,
+.text-muted,
+.text-zinc-400,
+.text-zinc-500 {
+  font-family: var(--font-secondary);
+}
+
+/* Monospace Font: JetBrains Mono for Code, Traces & Tokens (Regular 400) */
+pre, code, kbd, .font-mono {
+  font-family: 'JetBrains Mono', Consolas, monospace !important;
+  font-weight: 400 !important;
+}
+
+@layer utilities {
+  .font-primary {
+    font-family: 'Manrope', system-ui, -apple-system, sans-serif !important;
+  }
+  .font-secondary, .font-inter {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  }
+  .font-display {
+    font-family: 'Manrope', system-ui, -apple-system, sans-serif !important;
+  }
+}
+
+/* Monochromatic Scrollbar */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 9999px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-hover);
+}
+
+/* Glassmorphism effects with pure monochrome aesthetics */
+.glass-panel {
+  background: var(--header-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--surface-border);
+}
+
+/* Sidebar Collapsed State */
+#sidebar.collapsed {
+  width: 4.5rem;
+}
+
+#sidebar.collapsed .sidebar-text {
+  display: none;
+}
+
+#sidebar.collapsed .sidebar-group-title {
+  display: none;
+}
+
+/* Nav Links in Dark Mode (Sapphire Gradient matching Hero & Login) */
+html.dark .nav-item-active {
+  background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%) !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(147, 197, 253, 0.35) !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
+}
+
+html.dark .nav-item-active * {
+  color: #FFFFFF !important;
+}
+
+html.dark .nav-item-inactive {
+  color: #94A3B8 !important;
+}
+
+html.dark .nav-item-inactive:hover {
+  color: #FFFFFF !important;
+  background-color: rgba(59, 130, 246, 0.12) !important;
+}
+
+/* Pulsing Dots for Live Activity */
+.live-pulse-ring {
+  box-shadow: 0 0 0 0 var(--pulse-color);
+  animation: pulse-ring 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 var(--pulse-color);
+  }
+
+  70% {
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+/* Code block styles */
+pre code {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Light Mode High-Contrast Overrides */
+html:not(.dark) body {
+  background-color: #FAFAFA !important;
+  color: #09090B !important;
+}
+
+html:not(.dark) #topbar {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: #E4E4E7 !important;
+}
+
+html:not(.dark) aside#sidebar {
+  background-color: #FFFFFF !important;
+  border-color: #E4E4E7 !important;
+}
+
+html:not(.dark) .bg-bgDark,
+html:not(.dark) .bg-bgSpace {
+  background-color: #FAFAFA !important;
+}
+
+html:not(.dark) .bg-surfaceDark,
+html:not(.dark) .bg-surface,
+html:not(.dark) .bg-bgObsidian {
+  background-color: #FFFFFF !important;
+  border-color: #E4E4E7 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04) !important;
+}
+
+html:not(.dark) .bg-surfaceElevated {
+  background-color: #F0F6FF !important;
+  border-color: #E2E8F0 !important;
+}
+
+html:not(.dark) .border-surfaceBorder {
+  border-color: #E4E4E7 !important;
+}
+
+html:not(.dark) .border-surfaceBorderHover:hover {
+  border-color: #CBD5E1 !important;
+}
+
+/* Light Mode Text Hierarchy */
+html:not(.dark) h1,
+html:not(.dark) h2,
+html:not(.dark) h3,
+html:not(.dark) h4,
+html:not(.dark) .text-slate-100,
+html:not(.dark) .text-slate-200 {
+  color: #09090B !important;
+}
+
+html:not(.dark) .text-zinc-200,
+html:not(.dark) .text-zinc-300,
+html:not(.dark) .text-slate-300 {
+  color: #18181B !important;
+}
+
+html:not(.dark) .text-zinc-400,
+html:not(.dark) .text-slate-400,
+html:not(.dark) .text-textSecondary {
+  color: #52525B !important;
+}
+
+html:not(.dark) .text-zinc-500,
+html:not(.dark) .text-slate-500,
+html:not(.dark) .text-textMuted {
+  color: #71717A !important;
+}
+
+/* Brand Logo Badge & SVG - Radiant Royal/Electric Blue Gradient matching Hero & Login */
+.brand-logo-badge {
+  background: linear-gradient(135deg, #1D4ED8 0%, #3B82F6 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
+}
+
+.brand-logo-svg {
+  fill: #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+
+html.dark .brand-logo-badge {
+  background: linear-gradient(135deg, #1D4ED8 0%, #3B82F6 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4) !important;
+}
+
+html.dark .brand-logo-svg {
+  fill: #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+
+/* Inputs, Selects, and Command Palette in Light Mode */
+html:not(.dark) input,
+html:not(.dark) select,
+html:not(.dark) textarea,
+html:not(.dark) #open-cmd-palette {
+  background-color: #FFFFFF !important;
+  color: #09090B !important;
+  border-color: #E2E8F0 !important;
+}
+
+html:not(.dark) input::placeholder,
+html:not(.dark) #open-cmd-palette span {
+  color: #64748B !important;
+}
+
+/* Light Mode Badges */
+html:not(.dark) .bg-brandBlue\/10 {
+  background-color: rgba(37, 99, 235, 0.1) !important;
+  color: #1D4ED8 !important;
+  border-color: rgba(37, 99, 235, 0.2) !important;
+}
+
+/* Primary Action Buttons in Light Mode (Royal Blue matching Hero) */
+html:not(.dark) button.bg-brandBlue,
+html:not(.dark) a.bg-brandBlue {
+  background-color: #2563EB !important;
+  color: #FFFFFF !important;
+  border-color: #1D4ED8 !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important;
+}
+
+html:not(.dark) button.bg-brandBlue *,
+html:not(.dark) a.bg-brandBlue * {
+  color: #FFFFFF !important;
+}
+
+html:not(.dark) button.bg-brandBlue:hover,
+html:not(.dark) a.bg-brandBlue:hover {
+  background-color: #1D4ED8 !important;
+}
+
+/* Secondary Buttons in Light Mode */
+html:not(.dark) button.bg-surfaceElevated,
+html:not(.dark) a.bg-surfaceElevated {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border-color: #E2E8F0 !important;
+}
+
+html:not(.dark) button.bg-surfaceElevated:hover,
+html:not(.dark) a.bg-surfaceElevated:hover {
+  background-color: #F0F6FF !important;
+  border-color: #93C5FD !important;
+}
+
+/* Nav Link in Light Mode */
+html:not(.dark) .nav-item-active {
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%) !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(37, 99, 235, 0.35) !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important;
+}
+
+html:not(.dark) .nav-item-active * {
+  color: #FFFFFF !important;
+}
+
+html:not(.dark) .nav-item-inactive:hover {
+  color: #1D4ED8 !important;
+  background-color: rgba(37, 99, 235, 0.08) !important;
+}
+
+/* Table styling in Light Mode */
+html:not(.dark) table thead tr {
+  background-color: #F4F4F5 !important;
+  color: #71717A !important;
+}
+
+html:not(.dark) table tbody tr:hover {
+  background-color: #F4F4F5 !important;
+}
+
+/* Modal and Drawers in Light Mode */
+html:not(.dark) #cmd-palette-modal>div,
+html:not(.dark) #lens-ai-drawer,
+html:not(.dark) #prompt-diff-modal>div,
+html:not(.dark) #notification-drawer,
+html:not(.dark) #user-profile-menu {
+  background-color: #FFFFFF !important;
+  border-color: #E4E4E7 !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Anomaly Banner Keep High Contrast in Both Modes */
+html:not(.dark) .anomaly-banner {
+  background-color: #09090B !important;
+  color: #FFFFFF !important;
+  border-color: #27272A !important;
+}
+
+html:not(.dark) .anomaly-banner * {
+  color: #FFFFFF !important;
+}
+
+html:not(.dark) .anomaly-banner p {
+  color: #D4D4D8 !important;
+}

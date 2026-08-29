@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgentLens — Advanced AI Agent Observability Platform</title>
+  <meta name="description"
+    content="AI Agent Observability, Monitoring, Debugging, Latency, Token, Cost Analytics and Evaluation Platform">
+
+  <link rel="icon" type="image/svg+xml" href="src/logo.svg">
+
+  <!-- Fonts: Manrope (Primary), Inter (Secondary), JetBrains Mono (Code) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400&family=JetBrains+Mono:wght@400&family=Manrope:wght@400&display=swap"
+    rel="stylesheet">
+
+  <!-- Theme Initialization Script (Prevent Theme Flicker) -->
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('agentlens_theme') || 'dark';
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+      }
+    })();
+  </script>
+
+  <!-- Tailwind CSS CDN with custom config -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            /* Monochromatic Dynamic Tokens */
+            bgDark: 'var(--bg-dark)',
+            surfaceDark: 'var(--surface-dark)',
+            surfaceElevated: 'var(--surface-elevated)',
+            surfaceBorder: 'var(--surface-border)',
+            surfaceBorderHover: 'var(--surface-border-hover)',
+            brandBlue: 'var(--brand-blue)',
+            brandBlueHover: 'var(--brand-blue-hover)',
+            brandPurple: 'var(--brand-purple)',
+            brandCyan: 'var(--brand-cyan)',
+            statusSuccess: 'var(--status-success)',
+            statusWarning: 'var(--status-warning)',
+            statusError: 'var(--status-error)',
+            statusInfo: 'var(--status-info)',
+            bgSpace: 'var(--bg-space)',
+            bgObsidian: 'var(--bg-obsidian)',
+            surface: 'var(--surface)',
+            brandViolet: 'var(--brand-violet)',
+            brandIndigo: 'var(--brand-indigo)',
+            textMuted: 'var(--text-muted)',
+            textSecondary: 'var(--text-secondary)',
+          },
+          fontFamily: {
+            sans: ['Manrope', 'system-ui', 'sans-serif'],
+            primary: ['Manrope', 'system-ui', 'sans-serif'],
+            secondary: ['Inter', 'system-ui', 'sans-serif'],
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+            manrope: ['Manrope', 'system-ui', 'sans-serif'],
+            display: ['Manrope', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Consolas', 'monospace'],
+          },
+          fontWeight: {
+            hairline: '400',
+            thin: '400',
+            light: '400',
+            normal: '400',
+            medium: '400',
+            semibold: '400',
+            bold: '400',
+            extrabold: '400',
+            black: '400',
+          },
+          boxShadow: {
+            'glow-blue': '0 0 20px rgba(59, 130, 246, 0.35)',
+            'glow-purple': '0 0 20px rgba(129, 140, 248, 0.3)',
+            'glow-error': '0 0 20px rgba(239, 68, 68, 0.35)',
+            'glow-cyan': '0 0 20px rgba(56, 189, 248, 0.35)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom CSS for Timeline Gantt & Custom Elements -->
+  <link rel="stylesheet" href="src/styles.css">
+</head>
+
+<body
+  class="bg-bgDark text-slate-100 font-sans antialiased h-screen flex overflow-hidden selection:bg-brandBlue selection:text-white">
+
+  <div id="app" class="flex h-full w-full overflow-hidden">
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar"
+      class="w-64 bg-surfaceDark border-r border-surfaceBorder flex flex-col flex-shrink-0 transition-all duration-300 z-30 relative select-none">
+      <!-- Logo & Brand -->
+      <div class="h-16 px-4 flex items-center justify-between border-b border-surfaceBorder">
+        <a href="#/dashboard" class="flex items-center gap-3 group">
+          <div
+            class="brand-logo-badge w-9 h-9 rounded-xl p-2 shadow-md flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="brand-logo-svg w-full h-full">
+              <path d="M 50 23.5 C 57.5 23.5, 63.5 28.5, 68 38 L 84 70 C 88.5 79, 83.5 86.5, 73.5 86.5 L 61.5 74.5 L 57.5 62.5 C 55.5 56.5, 53 53, 50 53 C 47 53, 44.5 56.5, 42.5 62.5 L 38.5 74.5 L 26.5 86.5 C 16.5 86.5, 11.5 79, 16 70 L 32 38 C 36.5 28.5, 42.5 23.5, 50 23.5 Z" />
+            </svg>
+          </div>
+          <div class="sidebar-text">
+            <span class="font-bold text-base tracking-wider text-slate-900 dark:text-white">AGENTLENS</span>
+          </div>
+        </a>
+        <button id="toggle-sidebar-btn"
+          class="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-surfaceElevated transition-colors"
+          title="Toggle Sidebar">
+          <i data-lucide="panel-left-close" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Navigation Links Container -->
+      <div id="sidebar-nav" class="flex-1 overflow-y-auto px-3 py-4 space-y-6 scrollbar-thin">
+        <!-- Sections dynamically rendered via app.js -->
+      </div>
+
+      <!-- Live Stream Status Bar -->
+      <div class="p-3 border-t border-surfaceBorder bg-surfaceDark/50 sidebar-text">
+        <div class="flex items-center justify-between text-xs">
+          <div class="flex items-center gap-2">
+            <span class="relative flex h-2.5 w-2.5">
+              <span
+                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brandBlue opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-brandBlue"></span>
+            </span>
+            <span class="font-medium text-zinc-300">OTLP Collector</span>
+          </div>
+          <span
+            class="text-[11px] font-mono text-brandBlue bg-brandBlue/10 px-1.5 py-0.5 rounded border border-brandBlue/20">2.4k/s</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace Container -->
+    <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-bgDark">
+      <!-- Topbar Header -->
+      <header id="topbar"
+        class="h-16 border-b border-surfaceBorder bg-surfaceDark/90 backdrop-blur-md px-6 flex items-center justify-between flex-shrink-0 z-20 gap-4">
+        <!-- Left: Search trigger & Breadcrumbs -->
+        <div class="flex items-center gap-4 flex-1 max-w-xl">
+          <button id="open-cmd-palette"
+            class="w-full max-w-md bg-bgDark border border-surfaceBorder hover:border-surfaceBorderHover text-zinc-400 px-3.5 py-2 rounded-lg text-sm flex items-center justify-between transition-all group shadow-inner">
+            <div class="flex items-center gap-2.5">
+              <i data-lucide="search" class="w-4 h-4 text-zinc-400 group-hover:text-brandBlue transition-colors"></i>
+              <span class="text-xs font-sans">Search Traces, Agents, Models, Errors...</span>
+            </div>
+            <kbd
+              class="hidden sm:inline-flex items-center gap-1 font-mono text-[11px] font-semibold bg-surfaceElevated px-2 py-0.5 rounded border border-surfaceBorder text-zinc-300">
+              <span class="text-[10px]">Ctrl</span> K
+            </kbd>
+          </button>
+        </div>
+
+        <!-- Right: Environment, Time Range, Refresh, Theme Toggle, Lens AI, User -->
+        <div class="flex items-center gap-3">
+          <!-- Environment Selector -->
+          <div class="relative">
+            <select id="env-selector"
+              class="bg-surfaceElevated text-xs font-medium text-zinc-200 border border-surfaceBorder hover:border-zinc-500 rounded-lg px-3 py-1.5 focus:outline-none focus:border-brandBlue cursor-pointer appearance-none pr-8">
+              <option value="production">● Production</option>
+              <option value="staging">◐ Staging</option>
+              <option value="development">○ Development</option>
+            </select>
+            <i data-lucide="chevron-down"
+              class="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-2.5 pointer-events-none"></i>
+          </div>
+
+          <!-- Time Range Selector -->
+          <div class="relative">
+            <select id="timerange-selector"
+              class="bg-surfaceElevated text-xs font-medium text-zinc-200 border border-surfaceBorder hover:border-zinc-500 rounded-lg px-3 py-1.5 focus:outline-none focus:border-brandBlue cursor-pointer appearance-none pr-8 font-mono">
+              <option value="15m">Last 15 minutes</option>
+              <option value="1h">Last 1 hour</option>
+              <option value="6h">Last 6 hours</option>
+              <option value="24h" selected>Last 24 hours</option>
+              <option value="7d">Last 7 days</option>
+              <option value="30d">Last 30 days</option>
+              <option value="custom">Custom Range...</option>
+            </select>
+            <i data-lucide="calendar"
+              class="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-2.5 pointer-events-none"></i>
+          </div>
+
+          <!-- Refresh Button -->
+          <button id="refresh-btn"
+            class="p-2 text-zinc-400 hover:text-white hover:bg-surfaceElevated rounded-lg border border-surfaceBorder transition-all"
+            title="Refresh Data">
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+          </button>
+
+          <!-- Theme Toggle Button (Dark / Light Mode) -->
+          <button id="theme-toggle-btn" onclick="window.ThemeService.toggle()"
+            class="p-2 text-zinc-400 hover:text-white hover:bg-surfaceElevated rounded-lg border border-surfaceBorder transition-all cursor-pointer"
+            title="Toggle Light / Dark Mode">
+            <i data-lucide="sun" class="w-4 h-4"></i>
+          </button>
+
+          <!-- Live Toggle -->
+          <button id="live-toggle-btn"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-brandBlue/30 bg-brandBlue/10 text-brandBlue text-xs font-medium hover:bg-brandBlue/20 transition-all">
+            <span class="relative flex h-2 w-2">
+              <span
+                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brandBlue opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-brandBlue"></span>
+            </span>
+            <span>LIVE</span>
+          </button>
+
+          <div class="h-5 w-px bg-surfaceBorder"></div>
+
+          <!-- Ask Lens AI Button -->
+          <button id="open-lens-ai-btn"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-brandBlue hover:bg-brandBlueHover text-white text-xs font-semibold transition-all shadow-md shadow-brandBlue/20 cursor-pointer">
+            <i data-lucide="sparkles" class="w-4 h-4 text-white"></i>
+            <span>Ask Lens AI</span>
+          </button>
+
+          <!-- Notifications -->
+          <button id="notifications-btn"
+            class="p-2 text-zinc-400 hover:text-white hover:bg-surfaceElevated rounded-lg transition-colors relative">
+            <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-brandBlue"></span>
+          </button>
+
+          <!-- User Profile (with dropdown menu) -->
+          <div class="relative flex items-center gap-2.5 pl-2 border-l border-surfaceBorder">
+            <button id="user-avatar-btn"
+              class="w-8 h-8 rounded-full bg-surfaceElevated border border-surfaceBorder flex items-center justify-center font-bold text-xs text-white shadow hover:ring-2 hover:ring-brandBlue/40 transition-all cursor-pointer">
+              <span id="user-avatar-circle">KP</span>
+            </button>
+            <!-- User Profile Dropdown -->
+            <div id="user-profile-menu" class="hidden absolute right-0 top-10 w-64 bg-surfaceDark border border-surfaceBorder rounded-xl shadow-2xl z-50 overflow-hidden">
+              <div class="p-4 border-b border-surfaceBorder bg-surfaceElevated/40">
+                <div id="user-profile-name" class="font-semibold text-sm text-slate-100">Kodieshwaran P.R</div>
+                <div id="user-profile-email" class="text-xs text-zinc-400 mt-0.5">demo@agentlens.ai</div>
+                <div id="user-profile-ws" class="text-xs font-mono text-zinc-300 mt-1">Enterprise AI Lab</div>
+              </div>
+              <div class="p-2 space-y-0.5">
+                <button onclick="window.ThemeService.toggle()" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs text-zinc-300 hover:bg-surfaceElevated hover:text-white transition-colors">
+                  <span class="flex items-center gap-3"><i data-lucide="sun-moon" class="w-4 h-4"></i> Switch Theme</span>
+                  <span id="theme-mode-label" class="text-[10px] font-mono text-zinc-400 uppercase">DARK</span>
+                </button>
+                <a href="#/settings" class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-zinc-300 hover:bg-surfaceElevated hover:text-white transition-colors">
+                  <i data-lucide="settings" class="w-4 h-4"></i> Settings & API Keys
+                </a>
+                <button onclick="window.AuthService.signOut()" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-zinc-300 hover:bg-white/10 hover:text-white transition-colors">
+                  <i data-lucide="log-out" class="w-4 h-4"></i> Sign Out
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main View Content Area -->
+      <main id="main-content" class="flex-1 overflow-y-auto p-6 scrollbar-thin relative">
+        <!-- Views rendered dynamically here -->
+      </main>
+    </div>
+  </div>
+
+  <!-- Command Palette Modal (Ctrl+K) -->
+  <div id="cmd-palette-modal"
+    class="fixed inset-0 bg-black/85 backdrop-blur-md flex items-start justify-center pt-20 z-50 hidden">
+    <div
+      class="bg-surfaceDark border border-surfaceBorder rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+      <div class="p-4 border-b border-surfaceBorder flex items-center gap-3">
+        <i data-lucide="search" class="w-5 h-5 text-white"></i>
+        <input id="cmd-input" type="text"
+          placeholder="Type a trace ID, agent name, error code, tool, or page command..."
+          class="w-full bg-transparent border-none text-white text-sm focus:outline-none placeholder-zinc-500">
+        <kbd
+          class="text-[10px] font-mono text-zinc-400 bg-surfaceElevated px-2 py-1 rounded border border-surfaceBorder">ESC</kbd>
+      </div>
+      <div id="cmd-results" class="max-h-96 overflow-y-auto p-2 space-y-1">
+        <!-- Results dynamically populated -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Lens AI Slide-Over Drawer -->
+  <div id="lens-ai-drawer"
+    class="fixed inset-y-0 right-0 w-full max-w-lg bg-[#0E0E11] border-l border-surfaceBorder shadow-2xl z-50 flex flex-col transform translate-x-full transition-transform duration-300">
+    <div class="p-4 border-b border-surfaceBorder flex items-center justify-between bg-surfaceElevated/50">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-8 h-8 rounded-lg bg-white p-0.5 flex items-center justify-center">
+          <div class="w-full h-full bg-black rounded-[6px] flex items-center justify-center">
+            <i data-lucide="sparkles" class="w-4 h-4 text-white"></i>
+          </div>
+        </div>
+        <div>
+          <h3 class="font-bold text-sm text-white">Lens AI Debug Assistant</h3>
+          <p class="text-xs text-zinc-400">Natural language trace analysis & troubleshooting</p>
+        </div>
+      </div>
+      <button id="close-lens-ai-btn" class="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-surfaceElevated">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- AI Chat Messages -->
+    <div id="lens-ai-messages" class="flex-1 overflow-y-auto p-4 space-y-4 font-sans text-xs">
+      <!-- AI Welcome Message -->
+      <div class="flex gap-3">
+        <div
+          class="w-7 h-7 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="bot" class="w-4 h-4 text-white"></i>
+        </div>
+        <div class="bg-surfaceElevated p-3.5 rounded-xl border border-surfaceBorder max-w-md space-y-2">
+          <p class="text-zinc-200 leading-relaxed font-normal">
+            Hello! I'm <strong class="text-white">Lens AI</strong>. I have indexed your agent telemetry, execution
+            graphs, traces, and LLM costs.
+          </p>
+          <p class="text-zinc-400">Ask me anything, or try these quick options:</p>
+          <div class="flex flex-col gap-1.5 pt-1">
+            <button
+              class="ai-prompt-chip text-left p-2 rounded-lg bg-black border border-surfaceBorder hover:border-white text-zinc-300 hover:text-white transition-all">
+              🔍 "Why did ResearchAgent latency spike in the last hour?"
+            </button>
+            <button
+              class="ai-prompt-chip text-left p-2 rounded-lg bg-black border border-surfaceBorder hover:border-white text-zinc-300 hover:text-white transition-all">
+              ⚡ "Show me the top 3 slowest tool calls"
+            </button>
+            <button
+              class="ai-prompt-chip text-left p-2 rounded-lg bg-black border border-surfaceBorder hover:border-white text-zinc-300 hover:text-white transition-all">
+              💡 "How can I reduce ResearchAgent execution cost?"
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Input Footer -->
+    <div class="p-3 border-t border-surfaceBorder bg-surfaceElevated/30">
+      <form id="lens-ai-form" class="flex items-center gap-2">
+        <input id="lens-ai-input" type="text" placeholder="Ask Lens AI about your traces, latency, or errors..."
+          class="flex-1 bg-black border border-surfaceBorder rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-white">
+        <button type="submit" class="bg-white text-black p-2 rounded-lg hover:bg-zinc-200 transition-colors font-semibold">
+          <i data-lucide="send" class="w-4 h-4 text-black"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Span Inspector Side Drawer (When clicking a span in Trace Detail) -->
+  <div id="span-inspector-drawer"
+    class="fixed inset-y-0 right-0 w-full max-w-xl bg-[#0E0E11] border-l border-surfaceBorder shadow-2xl z-50 flex flex-col transform translate-x-full transition-transform duration-300">
+    <div class="p-4 border-b border-surfaceBorder flex items-center justify-between bg-surfaceElevated/50">
+      <div class="flex items-center gap-2.5">
+        <span id="span-type-badge"
+          class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-white/10 text-white border border-white/20">
+          LLM
+        </span>
+        <h3 id="span-title" class="font-bold text-sm text-white font-mono">gpt-4o completion</h3>
+      </div>
+      <button id="close-span-inspector-btn"
+        class="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-surfaceElevated">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <div id="span-inspector-tabs"
+      class="flex border-b border-surfaceBorder px-4 bg-[#050505] text-xs font-medium text-zinc-400 gap-4">
+      <button class="span-tab active border-b-2 border-white py-2.5 text-white font-semibold"
+        data-tab="overview">Overview</button>
+      <button class="span-tab py-2.5 hover:text-zinc-200" data-tab="input">Input / Prompt</button>
+      <button class="span-tab py-2.5 hover:text-zinc-200" data-tab="output">Output / Response</button>
+      <button class="span-tab py-2.5 hover:text-zinc-200" data-tab="attributes">Attributes</button>
+      <button class="span-tab py-2.5 hover:text-zinc-200" data-tab="logs">Logs & Events</button>
+    </div>
+
+    <div id="span-inspector-content" class="flex-1 overflow-y-auto p-4 space-y-4 font-sans">
+      <!-- Content populated dynamically -->
+    </div>
+  </div>
+
+  <!-- Prompt Diff Modal -->
+  <div id="prompt-diff-modal"
+    class="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-6 z-50 hidden">
+    <div
+      class="bg-[#0E0E11] border border-surfaceBorder rounded-xl w-full max-w-5xl h-[80vh] flex flex-col overflow-hidden shadow-2xl">
+      <div class="p-4 border-b border-surfaceBorder flex items-center justify-between bg-surfaceElevated">
+        <div class="flex items-center gap-3">
+          <i data-lucide="git-compare" class="w-5 h-5 text-white"></i>
+          <div>
+            <h3 class="font-bold text-sm text-white">Prompt Version Diff Inspector</h3>
+            <p class="text-xs text-zinc-400">Comparing <span class="font-mono text-zinc-300">ResearchPrompt
+                v1.3</span> vs <span class="font-mono text-white font-bold">v1.4 (Active)</span></p>
+          </div>
+        </div>
+        <button id="close-prompt-diff-btn"
+          class="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-surfaceElevated">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="flex-1 grid grid-cols-2 divide-x divide-surfaceBorder overflow-hidden font-mono text-xs">
+        <div class="flex flex-col h-full overflow-hidden bg-black p-4">
+          <div class="flex items-center justify-between pb-3 mb-3 border-b border-surfaceBorder text-zinc-400">
+            <span class="font-semibold text-zinc-300">Version 1.3 (Previous)</span>
+            <span class="text-[11px] text-zinc-400">Success Rate: 91.2% | Latency: 1.82s</span>
+          </div>
+          <pre class="flex-1 overflow-y-auto text-zinc-300 whitespace-pre-wrap leading-relaxed">You are a research assistant tasked with retrieving information.
+
+Task:
+Find recent scientific papers on LLM agents.
+
+Instructions:
+1. Search Google Scholar.
+2. Summarize key findings in 3 paragraphs.</pre>
+        </div>
+
+        <div class="flex flex-col h-full overflow-hidden bg-black p-4">
+          <div class="flex items-center justify-between pb-3 mb-3 border-b border-surfaceBorder text-zinc-400">
+            <span class="font-semibold text-white">Version 1.4 (Current - Recommended)</span>
+            <span class="text-[11px] text-white font-semibold">Success Rate: 98.7% (+7.5%) | Latency: 1.42s</span>
+          </div>
+          <pre class="flex-1 overflow-y-auto text-zinc-200 whitespace-pre-wrap leading-relaxed"><span class="bg-zinc-800 text-white border-l-2 border-white block px-1">You are an expert autonomous AI research assistant with step-by-step reasoning capabilities.</span>
+
+Task:
+Find recent scientific papers on LLM agents.
+
+Instructions:
+1. Search academic databases using <span class="bg-zinc-800 text-white border-l-2 border-white inline px-1">WebSearch API tool</span>.
+2. <span class="bg-zinc-800 text-white border-l-2 border-white inline px-1">Extract key methodology, benchmarking results, and token costs.</span>
+3. Summarize key findings in structured JSON format with citations.</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Center Drawer -->
+  <div id="notification-drawer"
+    class="fixed inset-y-0 right-0 w-full max-w-sm bg-surfaceDark border-l border-surfaceBorder shadow-2xl z-50 flex flex-col transform translate-x-full transition-transform duration-300">
+    <div class="p-4 border-b border-surfaceBorder flex items-center justify-between bg-surfaceElevated/50">
+      <div class="flex items-center gap-3">
+        <i data-lucide="bell" class="w-5 h-5 text-brandBlue"></i>
+        <h3 class="font-bold text-sm text-slate-100 dark:text-white">Notifications</h3>
+        <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-brandBlue/15 text-brandBlue border border-brandBlue/30 font-bold">5 NEW</span>
+      </div>
+      <button id="close-notification-btn" class="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-surfaceElevated">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+    <div class="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-thin">
+      <div class="p-3 rounded-xl bg-surfaceElevated border border-surfaceBorder space-y-1 cursor-pointer hover:border-rose-500/40 transition-colors" onclick="window.location.hash='#/errors'; document.getElementById('notification-drawer').classList.add('translate-x-full');">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-rose-400 flex items-center gap-1.5"><i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-rose-400"></i> Critical Error — CodeAgent</span>
+          <span class="text-[11px] font-mono text-zinc-400">2m ago</span>
+        </div>
+        <p class="text-[11px] text-zinc-300">Execution timeout exceeded 30s threshold. Trace #3bf94d12c8e1</p>
+      </div>
+      <div class="p-3 rounded-xl bg-surfaceElevated border border-surfaceBorder space-y-1 cursor-pointer hover:border-amber-500/40 transition-colors" onclick="window.location.hash='#/anomalies'; document.getElementById('notification-drawer').classList.add('translate-x-full');">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-amber-400 flex items-center gap-1.5"><i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i> Anomaly Detected — LLM Cost</span>
+          <span class="text-[11px] font-mono text-zinc-400">14m ago</span>
+        </div>
+        <p class="text-[11px] text-zinc-300">Token cost spike: +340% above baseline on gpt-4o</p>
+      </div>
+      <div class="p-3 rounded-xl bg-surfaceElevated border border-surfaceBorder space-y-1 cursor-pointer hover:border-blue-500/40 transition-colors" onclick="window.location.hash='#/alerts'; document.getElementById('notification-drawer').classList.add('translate-x-full');">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-sky-400 flex items-center gap-1.5"><i data-lucide="bell-ring" class="w-3.5 h-3.5 text-sky-400"></i> Alert Triggered — P95 Latency</span>
+          <span class="text-[11px] font-mono text-zinc-400">32m ago</span>
+        </div>
+        <p class="text-[11px] text-zinc-300">ResearchAgent P95 latency exceeded 4.0s SLO</p>
+      </div>
+      <div class="p-3 rounded-xl bg-surfaceElevated border border-surfaceBorder space-y-1 cursor-pointer hover:border-emerald-500/40 transition-colors">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-emerald-400 flex items-center gap-1.5"><i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i> Deployment — SupportAgent v3.1.0</span>
+          <span class="text-[11px] font-mono text-zinc-400">1h ago</span>
+        </div>
+        <p class="text-[11px] text-zinc-300">New version deployed successfully to Production</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 flex flex-col gap-2 z-50 pointer-events-none"></div>
+
+
+  <!-- Main Application JavaScript Modules -->
+  <script src="src/config.js"></script>
+  <script src="src/types.js"></script>
+  <script src="src/mockData.js"></script>
+  <script src="src/auth.js"></script>
+
+  <!-- Pre-Auth Views -->
+  <script src="src/views/signinView.js"></script>
+  <script src="src/views/signupView.js"></script>
+  <script src="src/views/landingView.js"></script>
+
+  <!-- Navigation Structure & View Rendering -->
+  <script src="src/views/dashboardView.js"></script>
+  <script src="src/views/liveMonitorView.js"></script>
+  <script src="src/views/agentsView.js"></script>
+  <script src="src/views/tracesView.js"></script>
+  <script src="src/views/traceDetailView.js"></script>
+  <script src="src/views/executionGraphView.js"></script>
+  <script src="src/views/llmAnalyticsView.js"></script>
+  <script src="src/views/promptsView.js"></script>
+  <script src="src/views/tokenAnalyticsView.js"></script>
+  <script src="src/views/costAnalyticsView.js"></script>
+  <script src="src/views/toolsView.js"></script>
+  <script src="src/views/workflowsView.js"></script>
+  <script src="src/views/sessionsView.js"></script>
+  <script src="src/views/errorsView.js"></script>
+  <script src="src/views/anomaliesView.js"></script>
+  <script src="src/views/alertsView.js"></script>
+  <script src="src/views/evaluationsView.js"></script>
+  <script src="src/views/experimentsView.js"></script>
+  <script src="src/views/feedbackView.js"></script>
+  <script src="src/views/logsView.js"></script>
+  <script src="src/views/opentelemetryView.js"></script>
+  <script src="src/views/integrationsView.js"></script>
+  <script src="src/views/servicesView.js"></script>
+  <script src="src/views/apiView.js"></script>
+  <script src="src/views/settingsView.js"></script>
+
+  <!-- Core App Controller -->
+  <script src="src/app.js"></script>
+</body>
+
+</html>
