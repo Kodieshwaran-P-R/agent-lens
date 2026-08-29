@@ -99,14 +99,6 @@ window.SigninView = {
                 <span>Sign in with Google</span>
               </button>
 
-              <!-- Setup Credentials Link -->
-              <div class="flex items-center justify-between px-1 text-[11px] text-zinc-500 font-mono">
-                <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> OAuth 2.0 Configured</span>
-                <button type="button" onclick="window.AuthService.showGoogleSetupModal()" class="text-blue-500 hover:text-blue-400 hover:underline cursor-pointer">
-                  ⚙ Edit Client ID / Secret
-                </button>
-              </div>
-
               <!-- Sign In with GitHub Button -->
               <button 
                 onclick="window.SigninView.handleDemoLogin()" 
