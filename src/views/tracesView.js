@@ -26,6 +26,10 @@ window.TracesView = {
           </div>
 
           <div class="flex items-center gap-2">
+            <button onclick="window.TelemetryService.simulateAgentRun(); window.TracesView.render(window.TracesView.container);" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-blue-500/20 transition-all cursor-pointer">
+              <i data-lucide="zap" class="w-4 h-4 text-white"></i>
+              <span>Simulate Live Run</span>
+            </button>
             <button onclick="window.TracesView.exportCsv()" class="px-3 py-1.5 rounded-lg bg-surfaceElevated border border-surfaceBorder hover:border-brandBlue text-xs font-semibold text-zinc-200 flex items-center gap-2 transition-all cursor-pointer">
               <i data-lucide="download" class="w-4 h-4 text-brandCyan"></i>
               <span>Export CSV</span>
