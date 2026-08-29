@@ -65,7 +65,7 @@ window.LiveMonitorView = {
                     </div>
                     <div>
                       <span class="font-bold text-sm text-white">ResearchAgent</span>
-                      <span class="text-[10px] font-mono text-zinc-400 ml-2">Trace ID: <a href="#/traces/8fa21c90e4a7" class="text-white hover:underline font-bold">8fa21c90e4a7</a></span>
+                      <span class="text-[10px] font-mono text-zinc-400 ml-2">Trace ID: <a href="#/traces/8fa21c90e4a7" class="text-white hover:underline font-bold">8fa21c90e4a7</a> <button onclick="navigator.clipboard.writeText('8fa21c90e4a7'); window.AgentLensApp.showToast('Copied Trace ID #8fa21c90e4a7', 'info');" title="Copy Trace ID" class="p-0.5 hover:text-white text-zinc-400 inline-flex items-center cursor-pointer"><i data-lucide="copy" class="w-3 h-3"></i></button></span>
                     </div>
                   </div>
                   <div class="flex items-center gap-2">
@@ -126,7 +126,7 @@ window.LiveMonitorView = {
                     </div>
                     <div>
                       <span class="font-bold text-sm text-slate-100">CodeAgent</span>
-                      <span class="text-[10px] font-mono text-slate-400 ml-2">Trace ID: <a href="#/traces/3bf94d12c8e1" class="text-brandBlue hover:underline">3bf94d12c8e1</a></span>
+                      <span class="text-[10px] font-mono text-slate-400 ml-2">Trace ID: <a href="#/traces/3bf94d12c8e1" class="text-brandBlue hover:underline">3bf94d12c8e1</a> <button onclick="navigator.clipboard.writeText('3bf94d12c8e1'); window.AgentLensApp.showToast('Copied Trace ID #3bf94d12c8e1', 'info');" title="Copy Trace ID" class="p-0.5 hover:text-white text-zinc-400 inline-flex items-center cursor-pointer"><i data-lucide="copy" class="w-3 h-3"></i></button></span>
                     </div>
                   </div>
                   <div class="flex items-center gap-2">

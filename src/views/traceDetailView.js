@@ -27,14 +27,22 @@ window.TraceDetailView = {
             </div>
           </div>
 
-          <div class="flex items-center gap-3">
-            <button onclick="window.AgentLensApp.showToast('Copied Trace URL to clipboard!', 'success')" class="px-3 py-1.5 rounded-lg bg-surfaceElevated border border-surfaceBorder hover:border-slate-500 text-xs font-semibold text-slate-200 flex items-center gap-2 transition-all">
-              <i data-lucide="share-2" class="w-4 h-4 text-brandBlue"></i>
-              <span>Share Trace</span>
+          <div class="flex items-center gap-2.5">
+            <button onclick="window.TraceDetailView.copyTraceId('${trace.traceId}')" class="px-3 py-1.5 rounded-lg bg-surfaceElevated border border-surfaceBorder hover:border-brandBlue text-xs font-semibold text-zinc-200 flex items-center gap-2 transition-all cursor-pointer">
+              <i data-lucide="copy" class="w-4 h-4 text-brandBlue"></i>
+              <span>Copy ID</span>
             </button>
-            <button onclick="window.location.hash='#/graph'" class="px-3.5 py-1.5 rounded-lg bg-brandPurple hover:bg-brandPurple/90 text-white text-xs font-semibold flex items-center gap-2 shadow-glow-purple transition-all">
+            <button onclick="window.TraceDetailView.exportJson('${trace.traceId}')" class="px-3 py-1.5 rounded-lg bg-surfaceElevated border border-surfaceBorder hover:border-brandCyan text-xs font-semibold text-zinc-200 flex items-center gap-2 transition-all cursor-pointer">
+              <i data-lucide="download" class="w-4 h-4 text-brandCyan"></i>
+              <span>Download JSON</span>
+            </button>
+            <button onclick="window.AgentLensApp.showToast('Copied Trace URL to clipboard!', 'success')" class="px-3 py-1.5 rounded-lg bg-surfaceElevated border border-surfaceBorder hover:border-zinc-500 text-xs font-semibold text-zinc-200 flex items-center gap-2 transition-all cursor-pointer">
+              <i data-lucide="share-2" class="w-4 h-4 text-brandBlue"></i>
+              <span>Share</span>
+            </button>
+            <button onclick="window.location.hash='#/graph'" class="px-3.5 py-1.5 rounded-lg bg-brandPurple hover:bg-brandPurple/90 text-white text-xs font-semibold flex items-center gap-2 shadow-glow-purple transition-all cursor-pointer">
               <i data-lucide="network" class="w-4 h-4"></i>
-              <span>View Execution Graph</span>
+              <span>Execution Graph</span>
             </button>
           </div>
         </div>
@@ -162,5 +170,40 @@ window.TraceDetailView = {
     }
 
     return html;
+  },
+
+  copyTraceId: function(traceId) {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(traceId).then(() => {
+        if (window.AgentLensApp && window.AgentLensApp.showToast) {
+          window.AgentLensApp.showToast(`Copied Trace ID: ${traceId}`, 'info');
+        }
+      });
+    }
+  },
+
+  exportJson: function(traceId) {
+    const trace = window.AgentLensData && window.AgentLensData.traces 
+      ? window.AgentLensData.traces.find(t => t.traceId === traceId) 
+      : null;
+
+    if (!trace) {
+      if (window.AgentLensApp) window.AgentLensApp.showToast('Trace not found', 'error');
+      return;
+    }
+
+    const blob = new Blob([JSON.stringify(trace, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `trace_${traceId}_${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    if (window.AgentLensApp && window.AgentLensApp.showToast) {
+      window.AgentLensApp.showToast(`Downloaded trace ${traceId} as JSON`, 'success');
+    }
   }
 };
