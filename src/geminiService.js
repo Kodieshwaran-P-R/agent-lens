@@ -36,6 +36,16 @@ window.GeminiService = {
     return Boolean(key && key.trim().length > 10);
   },
 
+  history: [],
+
+  clearHistory: function() {
+    this.history = [];
+  },
+
+  getHistory: function() {
+    return this.history;
+  },
+
   // Build telemetry system context from live AgentLens data
   getTelemetryContext: function() {
     try {
@@ -102,74 +112,111 @@ Instructions:
     }
   },
 
-  // Ask Gemini a question with full telemetry context
-  askGemini: async function(prompt, chatHistory = []) {
+  // Stream Gemini response tokens in real-time with multi-turn chat history
+  askGeminiStream: async function(prompt, onChunk, onDone, onError) {
     const key = this.getApiKey();
     if (!key) {
-      return {
-        success: false,
-        needsKey: true,
-        error: 'Gemini API key is not configured.'
-      };
+      if (onError) onError('Gemini API key is not configured.');
+      return;
     }
 
     try {
       const systemInstruction = this.getTelemetryContext();
-      
-      // Build conversation contents
-      const contents = [];
-      
-      // System instructions supported via system_instruction in Gemini 1.5
-      // or injected as initial model priming
-      contents.push({
-        role: 'user',
-        parts: [{ text: `[System Context]\n${systemInstruction}\n\nDeveloper question: ${prompt}` }]
-      });
 
-      const url = `${this.API_BASE}/${this.MODEL}:generateContent?key=${encodeURIComponent(key)}`;
+      // Maintain multi-turn history (limit to last 8 messages for speed)
+      if (this.history.length > 8) {
+        this.history = this.history.slice(-8);
+      }
+
+      // Add user turn
+      const userTurn = { role: 'user', parts: [{ text: prompt }] };
+      const conversationPayload = [...this.history, userTurn];
+
+      const url = `${this.API_BASE}/${this.MODEL}:streamGenerateContent?alt=sse&key=${encodeURIComponent(key)}`;
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: contents,
+          contents: conversationPayload,
+          system_instruction: {
+            parts: [{ text: systemInstruction }]
+          },
           generationConfig: {
             temperature: 0.4,
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 1024
+            maxOutputTokens: 2048
           }
         })
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        const message = (data.error && data.error.message) || `Gemini API Error (${response.status})`;
-        return { success: false, error: message };
+        let errMsg = `Gemini API Error (${response.status})`;
+        try {
+          const errData = await response.json();
+          if (errData.error && errData.error.message) errMsg = errData.error.message;
+        } catch (e) {}
+        if (onError) onError(errMsg);
+        return;
       }
 
-      const text = data.candidates && 
-                   data.candidates[0] && 
-                   data.candidates[0].content && 
-                   data.candidates[0].content.parts && 
-                   data.candidates[0].content.parts[0] && 
-                   data.candidates[0].content.parts[0].text;
-
-      if (!text) {
-        return { success: false, error: 'Empty response received from Gemini.' };
+      if (!response.body) {
+        if (onError) onError('Readable stream not supported by browser.');
+        return;
       }
 
-      return {
-        success: true,
-        text: text,
-        usage: data.usageMetadata || null,
-        model: this.MODEL
-      };
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let fullText = '';
+      let buffer = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // Keep incomplete trailing piece in buffer
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('data: ')) {
+            const jsonStr = trimmed.slice(6).trim();
+            if (!jsonStr || jsonStr === '[DONE]') continue;
+            try {
+              const data = JSON.parse(jsonStr);
+              const textChunk = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+              if (textChunk) {
+                fullText += textChunk;
+                if (onChunk) onChunk(textChunk, fullText);
+              }
+            } catch (e) {
+              // Ignore partial JSON chunks
+            }
+          }
+        }
+      }
+
+      // Record successful turn into conversation memory
+      this.history.push(userTurn);
+      this.history.push({ role: 'model', parts: [{ text: fullText }] });
+
+      if (onDone) onDone(fullText);
     } catch (err) {
-      return {
-        success: false,
-        error: err.message || 'Network error communicating with Google Gemini API.'
-      };
+      if (onError) onError(err.message || 'Network error streaming from Gemini API.');
     }
+  },
+
+  // Fallback single-call askGemini
+  askGemini: async function(prompt) {
+    return new Promise((resolve) => {
+      let resultText = '';
+      this.askGeminiStream(
+        prompt,
+        (chunk, accumulated) => { resultText = accumulated; },
+        (full) => resolve({ success: true, text: full }),
+        (err) => resolve({ success: false, error: err })
+      );
+    });
   }
 };

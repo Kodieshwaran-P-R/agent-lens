@@ -243,10 +243,11 @@ window.AgentLensApp = {
     }
   },
 
-  // 4. Lens AI Assistant Engine (Powered by Google Gemini)
+  // 4. Lens AI Assistant Engine (Powered by Google Gemini Streaming & Multi-Turn Memory)
   setupLensAi: function() {
     const openBtn = document.getElementById('open-lens-ai-btn');
     const closeBtn = document.getElementById('close-lens-ai-btn');
+    const clearBtn = document.getElementById('clear-lens-ai-btn');
     const drawer = document.getElementById('lens-ai-drawer');
     const form = document.getElementById('lens-ai-form');
     const input = document.getElementById('lens-ai-input');
@@ -273,18 +274,37 @@ window.AgentLensApp = {
       openBtn.onclick = () => {
         drawer.classList.remove('translate-x-full');
         updateBadge();
+        if (input) setTimeout(() => input.focus(), 100);
       };
     }
     if (closeBtn && drawer) {
       closeBtn.onclick = () => drawer.classList.add('translate-x-full');
     }
 
+    // Global Keyboard Shortcut (Ctrl+J or Cmd+J) to toggle Lens AI drawer
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        if (drawer) {
+          const isClosed = drawer.classList.contains('translate-x-full');
+          if (isClosed) {
+            drawer.classList.remove('translate-x-full');
+            updateBadge();
+            if (input) setTimeout(() => input.focus(), 100);
+          } else {
+            drawer.classList.add('translate-x-full');
+          }
+        }
+      }
+    });
+
     // Helper to format markdown text safely
     const formatAiResponse = (raw) => {
+      if (!raw) return '';
       let formatted = raw
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        .replace(/### (.*?)\n/g, '<h4 class="font-bold text-white text-xs mt-2 mb-1">$1</h4>')
-        .replace(/## (.*?)\n/g, '<h3 class="font-bold text-white text-sm mt-2 mb-1">$1</h3>')
+        .replace(/### (.*?)\n/g, '<h4 class="font-bold text-white text-xs mt-2 mb-1 font-sans">$1</h4>')
+        .replace(/## (.*?)\n/g, '<h3 class="font-bold text-white text-sm mt-2 mb-1 font-sans">$1</h3>')
         .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
         .replace(/\*(.*?)\*/g, '<em class="text-zinc-300">$1</em>')
         .replace(/`([^`]+)`/g, '<code class="bg-black/60 text-sky-300 px-1.5 py-0.5 rounded font-mono text-[11px] border border-surfaceBorder">$1</code>')
@@ -296,7 +316,55 @@ window.AgentLensApp = {
       return `<p class="text-zinc-300 leading-relaxed font-normal">${formatted}</p>`;
     };
 
-    // Process user question
+    // Wire up prompt chips
+    const wireChips = () => {
+      document.querySelectorAll('.ai-prompt-chip').forEach(chip => {
+        chip.onclick = () => {
+          const text = chip.innerText.replace(/^[^"]*"|"[^"]*$/g, '').trim();
+          handleQuery(text);
+        };
+      });
+    };
+
+    // "New Chat" button to reset memory
+    if (clearBtn) {
+      clearBtn.onclick = () => {
+        if (window.GeminiService) window.GeminiService.clearHistory();
+        if (messages) {
+          messages.innerHTML = `
+            <div class="flex gap-3">
+              <div class="w-7 h-7 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="bot" class="w-4 h-4 text-blue-400"></i>
+              </div>
+              <div class="bg-surfaceElevated p-3.5 rounded-xl border border-surfaceBorder max-w-md space-y-2">
+                <p class="text-zinc-200 leading-relaxed font-normal">
+                  Conversation reset. I'm ready to analyze your agent telemetry, execution graphs, and LLM costs.
+                </p>
+                <p class="text-zinc-400">Try these quick options:</p>
+                <div class="flex flex-col gap-1.5 pt-1">
+                  <button class="ai-prompt-chip text-left p-2 rounded-lg bg-surfaceDark border border-surfaceBorder hover:border-brandBlue text-zinc-300 hover:text-white transition-all cursor-pointer">
+                    🔍 "Why did ResearchAgent latency spike in the last hour?"
+                  </button>
+                  <button class="ai-prompt-chip text-left p-2 rounded-lg bg-surfaceDark border border-surfaceBorder hover:border-brandBlue text-zinc-300 hover:text-white transition-all cursor-pointer">
+                    ⚡ "Show me the top 3 slowest tool calls"
+                  </button>
+                  <button class="ai-prompt-chip text-left p-2 rounded-lg bg-surfaceDark border border-surfaceBorder hover:border-brandBlue text-zinc-300 hover:text-white transition-all cursor-pointer">
+                    💡 "How can I reduce ResearchAgent execution cost?"
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+          if (window.lucide) lucide.createIcons();
+          wireChips();
+        }
+        if (window.AgentLensApp && window.AgentLensApp.showToast) {
+          window.AgentLensApp.showToast('New Chat started. Memory cleared.', 'info');
+        }
+      };
+    }
+
+    // Process user question with live SSE streaming
     const handleQuery = async (queryText) => {
       const text = (queryText || '').trim();
       if (!text || !messages) return;
@@ -359,71 +427,80 @@ window.AgentLensApp = {
             if (window.AgentLensApp && window.AgentLensApp.showToast) {
               window.AgentLensApp.showToast('Gemini API Key Saved!', 'success');
             }
-            // Re-run the user query now that key is configured
             handleQuery(text);
           };
         }
         return;
       }
 
-      // Add loading message
-      const loadingId = 'ai-loading-' + Date.now();
+      // Create streaming response bubble
+      const streamId = 'stream-' + Date.now();
+      const contentId = 'content-' + streamId;
       messages.innerHTML += `
-        <div id="${loadingId}" class="flex gap-3">
-          <div class="w-7 h-7 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0 animate-pulse">
+        <div id="${streamId}" class="flex gap-3">
+          <div class="w-7 h-7 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
             <i data-lucide="sparkles" class="w-4 h-4 text-blue-400"></i>
           </div>
-          <div class="bg-surfaceElevated p-3 rounded-xl border border-surfaceBorder text-zinc-400 font-mono text-[11px] flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
-            <span>Gemini 1.5 Flash analyzing telemetry & traces...</span>
+          <div class="bg-surfaceElevated p-3.5 rounded-xl border border-surfaceBorder max-w-md space-y-2 text-xs">
+            <div class="flex items-center justify-between text-[10px] font-mono text-zinc-400 border-b border-surfaceBorder pb-1 mb-1">
+              <span class="flex items-center gap-1 text-emerald-400">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                Gemini 1.5 Flash (Streaming)
+              </span>
+              <span>Telemetry Ingested</span>
+            </div>
+            <div id="${contentId}" class="space-y-2 text-zinc-200 min-h-[20px]">
+              <span class="inline-flex items-center gap-1.5 text-zinc-400 font-mono text-[11px]">
+                <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+                Analyzing telemetry...
+              </span>
+            </div>
           </div>
         </div>
       `;
       messages.scrollTop = messages.scrollHeight;
       if (window.lucide) lucide.createIcons();
 
-      // Call Gemini API
-      const result = await window.GeminiService.askGemini(text);
+      const contentElem = document.getElementById(contentId);
 
-      const loader = document.getElementById(loadingId);
-      if (loader) loader.remove();
+      // Start streaming from Gemini
+      await window.GeminiService.askGeminiStream(
+        text,
+        (chunk, accumulated) => {
+          if (contentElem) {
+            contentElem.innerHTML = formatAiResponse(accumulated) + '<span class="inline-block w-1.5 h-3.5 bg-blue-400 animate-pulse ml-0.5 align-middle"></span>';
+            messages.scrollTop = messages.scrollHeight;
+          }
+        },
+        (finalText) => {
+          if (contentElem) {
+            contentElem.innerHTML = formatAiResponse(finalText);
+            messages.scrollTop = messages.scrollHeight;
+            if (window.lucide) lucide.createIcons();
+          }
+        },
+        (err) => {
+          const streamCard = document.getElementById(streamId);
+          if (streamCard) streamCard.remove();
 
-      if (result.success) {
-        messages.innerHTML += `
-          <div class="flex gap-3">
-            <div class="w-7 h-7 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
-              <i data-lucide="sparkles" class="w-4 h-4 text-blue-400"></i>
-            </div>
-            <div class="bg-surfaceElevated p-3.5 rounded-xl border border-surfaceBorder max-w-md space-y-2 text-xs">
-              <div class="flex items-center justify-between text-[10px] font-mono text-zinc-400 border-b border-surfaceBorder pb-1 mb-2">
-                <span class="flex items-center gap-1 text-emerald-400">● Gemini 1.5 Flash</span>
-                <span>Telemetry Ingested</span>
+          messages.innerHTML += `
+            <div class="flex gap-3">
+              <div class="w-7 h-7 rounded-lg bg-rose-500/20 border border-rose-500/30 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="alert-circle" class="w-4 h-4 text-rose-400"></i>
               </div>
-              <div class="space-y-2 text-zinc-200">
-                ${formatAiResponse(result.text)}
+              <div class="bg-surfaceElevated p-3.5 rounded-xl border border-rose-500/30 max-w-md space-y-1.5 text-xs">
+                <div class="font-bold text-rose-400">Gemini Error</div>
+                <p class="text-zinc-300 font-normal">${err}</p>
+                <div class="pt-1 text-[11px]">
+                  <a href="#/settings" class="text-blue-400 hover:underline">Update Gemini API Key in Settings →</a>
+                </div>
               </div>
             </div>
-          </div>
-        `;
-      } else {
-        messages.innerHTML += `
-          <div class="flex gap-3">
-            <div class="w-7 h-7 rounded-lg bg-rose-500/20 border border-rose-500/30 flex items-center justify-center flex-shrink-0">
-              <i data-lucide="alert-circle" class="w-4 h-4 text-rose-400"></i>
-            </div>
-            <div class="bg-surfaceElevated p-3.5 rounded-xl border border-rose-500/30 max-w-md space-y-1.5 text-xs">
-              <div class="font-bold text-rose-400">Gemini Error</div>
-              <p class="text-zinc-300 font-normal">${result.error}</p>
-              <div class="pt-1 text-[11px]">
-                <a href="#/settings" class="text-blue-400 hover:underline">Update Gemini API Key in Settings →</a>
-              </div>
-            </div>
-          </div>
-        `;
-      }
-
-      messages.scrollTop = messages.scrollHeight;
-      if (window.lucide) lucide.createIcons();
+          `;
+          messages.scrollTop = messages.scrollHeight;
+          if (window.lucide) lucide.createIcons();
+        }
+      );
     };
 
     // Wire up chat form
@@ -436,14 +513,7 @@ window.AgentLensApp = {
       };
     }
 
-    // Wire up quick suggestion chips
-    document.querySelectorAll('.ai-prompt-chip').forEach(chip => {
-      chip.onclick = () => {
-        const text = chip.innerText.replace(/^[^"]*"|"[^"]*$/g, '').trim();
-        handleQuery(text);
-      };
-    });
-
+    wireChips();
     updateBadge();
   },
 
